@@ -21,6 +21,22 @@ export default function RetirementForm() {
     monthlyExpenses: ''
   });
 
+  const getAuthToken = () => {
+    return localStorage.getItem('authToken');
+  };
+
+  const getHeaders = (contentType = false) => {
+    const headers: Record<string, string> = {
+      'Authorization': `Bearer ${getAuthToken()}`,
+    };
+    
+    if (contentType) {
+      headers['Content-Type'] = 'application/json';
+    }
+    
+    return headers;
+  };
+
   // Fetch initial data when component mounts
   useEffect(() => {
     fetchProfileData();
@@ -30,10 +46,9 @@ export default function RetirementForm() {
     try {
       const response = await fetch('https://financebro-backend-958019176719.us-central1.run.app/tracker', {
         method: 'GET',
-        headers: {
-          'Accept': 'application/json'
-        }
+        headers: getHeaders()
       });
+
 
       if (response.ok) {
         const data = await response.json();
@@ -58,9 +73,7 @@ export default function RetirementForm() {
     try {
       const response = await fetch('https://financebro-backend-958019176719.us-central1.run.app/tracker', {
         method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json'
-        },
+        headers: getHeaders(),
         body: JSON.stringify({
           name: formData.name,
           age: parseInt(formData.age),
