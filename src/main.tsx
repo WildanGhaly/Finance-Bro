@@ -3,9 +3,11 @@ import { createRoot } from 'react-dom/client'
 import './index.css'
 // import App from './App.tsx'
 import Dashboard from './pages/Home.tsx'
+import ProfileForm from './pages/Profile.tsx'
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <Dashboard />
+    {/* <Dashboard /> */}
+    <ProfileForm />
   </StrictMode>,
 )
