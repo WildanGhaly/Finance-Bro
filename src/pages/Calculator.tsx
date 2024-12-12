@@ -5,7 +5,7 @@ import moneyBagSvg from '../assets/money-bag.svg';
 import moneyFilledSvg from '../assets/money-filled.svg';
 import clockSvg from '../assets/clock.svg';
 
-const SavingsPage: React.FC = () => {
+const Calculator: React.FC = () => {
   return (
     <div className="min-h-screen bg-gray-100 flex justify-center items-center">
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 w-full max-w-4xl">
@@ -35,4 +35,4 @@ const SavingsPage: React.FC = () => {
   );
 };
 
-export default SavingsPage;
+export default Calculator;
