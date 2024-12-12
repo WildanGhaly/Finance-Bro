@@ -36,6 +36,8 @@ export default function RetirementForm() {
 
   const handleLogout = () => {
     console.log('Logging out...');
+    localStorage.removeItem('authToken');
+    console.log(localStorage.getItem('authToken'));
   };
 
   return (
