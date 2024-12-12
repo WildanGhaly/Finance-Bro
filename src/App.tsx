@@ -1,4 +1,3 @@
-// src/App.tsx
 import React, { useEffect } from 'react';
 import { useNavigate, Routes, Route, useLocation } from 'react-router-dom';  // Remove BrowserRouter here
 import Navbar from './components/Navbar';
@@ -11,25 +10,27 @@ import RetirementForm from './pages/Profile';
 import Login from './pages/Login';
 
 const App: React.FC = () => {
-  const navigate = useNavigate();
-  const location = useLocation();
-
-  // Check if the token exists in localStorage
-  useEffect(() => {
-    const authToken = localStorage.getItem('authToken');
-    
-    if (!authToken) {
-      // If no token, redirect to login page
-      navigate('/login');
-    } else {
-      // If token exists, navigate to the dashboard
-      navigate('/home');
-    }
-  }, [navigate]);
+    const navigate = useNavigate();
+    const location = useLocation();
+  
+    useEffect(() => {
+      const authToken = localStorage.getItem('authToken');
+      
+      // Only redirect if on login page and token exists
+      if (authToken && location.pathname === '/login') {
+        navigate('/home');
+      }
+      // Only redirect to login if no token and not already on login page
+      else if (!authToken && location.pathname !== '/login') {
+        navigate('/login');
+      }
+    }, [navigate, location]);
+  
 
   return (
     <>
       {location.pathname !== '/login' && <Navbar />}
+      {/* <Navbar /> */}
       <Routes>
         <Route path="/home" element={<Home />} />
         <Route path="/savings" element={<SavingsPage />} />
