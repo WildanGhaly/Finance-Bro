@@ -148,7 +148,7 @@ export default function RetirementForm() {
 
           <Input
             name="monthlyExpenses"
-            placeholder="Montly Expenses"
+            placeholder="Monthly Expenses"
             type="number"
             value={formData.monthlyExpenses}
             onChange={handleChange}
