@@ -1,5 +1,5 @@
 'use client'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Button } from "../components/ui/button"
 import { Input } from "../components/ui/input"
 import { Card } from "../components/ui/card"
@@ -21,9 +21,66 @@ export default function RetirementForm() {
     monthlyExpenses: ''
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
+  // Fetch initial data when component mounts
+  useEffect(() => {
+    fetchProfileData();
+  }, []);
+
+  const fetchProfileData = async () => {
+    try {
+      const response = await fetch('https://financebro-backend-958019176719.us-central1.run.app/tracker', {
+        method: 'GET',
+        headers: {
+          'Accept': 'application/json'
+        }
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setFormData({
+          name: data.name || '',
+          age: data.age?.toString() || '',
+          retireAge: data.retireAge?.toString() || '',
+          retirePeriod: data.retirePeriod?.toString() || '',
+          monthlyExpenses: data.monthlyExpenses?.toString() || ''
+        });
+      } else {
+        console.error('Failed to fetch profile data');
+      }
+    } catch (error) {
+      console.error('Error fetching profile data:', error);
+    }
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log('Form submitted:', formData);
+    
+    try {
+      const response = await fetch('https://financebro-backend-958019176719.us-central1.run.app/tracker', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          name: formData.name,
+          age: parseInt(formData.age),
+          retireAge: parseInt(formData.retireAge),
+          retirePeriod: parseInt(formData.retirePeriod),
+          monthlyExpenses: parseInt(formData.monthlyExpenses)
+        })
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        console.log('Update successful:', result);
+        // You could add a success notification here
+      } else {
+        console.error('Failed to update profile');
+        // You could add an error notification here
+      }
+    } catch (error) {
+      console.error('Error updating profile:', error);
+    }
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
