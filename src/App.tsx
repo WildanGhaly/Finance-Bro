@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { useNavigate, Routes, Route, useLocation } from 'react-router-dom';  // Remove BrowserRouter here
+import { useNavigate, Routes, Route, useLocation } from 'react-router-dom'; 
 import Navbar from './components/Navbar';
 import Home from './pages/Home';
 import SavingsPage from './pages/Savings';
@@ -29,8 +29,10 @@ const App: React.FC = () => {
 
   return (
     <>
-      {location.pathname !== '/login' && <Navbar />}
+      {location.pathname !== '/login' && <Navbar />} {/* Only show Navbar if not on login page */}
+      
       {/* <Navbar /> */}
+
       <Routes>
         <Route path="/home" element={<Home />} />
         <Route path="/savings" element={<SavingsPage />} />
