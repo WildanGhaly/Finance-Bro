@@ -67,10 +67,6 @@ const MySavingsPage: React.FC = () => {
     }
   };
 
-  const calculatePercentage = (amount: number) => {
-    return Math.round((amount / totalAmount) * 100);
-  };
-
   const [newSaving, setNewSaving] = useState<RequestSaving>({
     name: '',
     amount: 0,

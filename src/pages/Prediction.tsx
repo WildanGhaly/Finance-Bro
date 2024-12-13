@@ -1,72 +1,141 @@
 import React, { useState } from 'react';
-import dropdown from '../assets/dropdown.svg';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import {
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+} from 'recharts';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "../components/ui/select";
 
-const Prediction: React.FC = () => {
-  const [isOpen, setIsOpen] = useState(false);
+interface StockPrediction {
+  date: string;
+  predictedPrice: number;
+}
 
-  const toggleDropdown = () => {
-    setIsOpen(!isOpen);
+interface ApiResponse {
+  [date: string]: {
+    "Predicted Price": number;
+  };
+}
+
+const getAuthToken = () => {
+  return localStorage.getItem('authToken');
+};
+
+const getHeaders = (contentType = false) => {
+  const headers: Record<string, string> = {
+    'Authorization': `Bearer ${getAuthToken()}`,
   };
 
-  // Sample data for the prediction graph
-  const data = [
-    { date: '2024-12-11', predictedPrice: 10034.46 },
-    { date: '2024-12-12', predictedPrice: 10018.58 },
-    { date: '2024-12-13', predictedPrice: 10005.54 },
-    { date: '2024-12-14', predictedPrice: 9994.59 },
-    { date: '2024-12-15', predictedPrice: 9985.09 }
-  ];
+  if (contentType) {
+    headers['Content-Type'] = 'application/json';
+  }
 
-  // Get the start and end predicted prices
-  const startPrice = data[0].predictedPrice;
-  const endPrice = data[data.length - 1].predictedPrice;
+  return headers;
+};
+
+const Prediction: React.FC = () => {
+  const [data, setData] = useState<StockPrediction[]>([]);
+  const [selectedStock, setSelectedStock] = useState<string>('');
+  const [loading, setLoading] = useState<boolean>(false);
+  const list_code_stock = ['BBCA', 'BBRI', 'BMRI', 'INKP', 'TKIM', 'BYAN', 'TMAS', 'ASII', 'TLKM', 'UNVR', 'AMRT', 'ADRO'];
+
+  const fetchData = async (stock_code: string) => {
+    setLoading(true);
+    try {
+      const start_date = new Date().toISOString().split('T')[0];
+      const end_date = new Date(new Date().setDate(new Date().getDate() + 7)).toISOString().split('T')[0];
+      console.log("start_date", start_date);
+      console.log("end_date", end_date);
+      console.log("stock_code", stock_code);
+
+      const response = await fetch(`https://financebro-backend-958019176719.us-central1.run.app/predict`, {
+        method: 'POST',
+        headers: getHeaders(true),
+        body: JSON.stringify({ stock_code, start_date, end_date }),
+      });
+
+      if (!response.ok) throw new Error('Failed to fetch prediction');
+
+      const result: ApiResponse = await response.json();
+
+      const transformedData: StockPrediction[] = Object.entries(result).map(([date, value]) => ({
+        date,
+        predictedPrice: value["Predicted Price"],
+      }));
+
+      setData(transformedData);
+      setSelectedStock(stock_code);
+    } catch (error) {
+      console.error('Error fetching data:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleStockChange = (stock_code: string) => {
+    fetchData(stock_code);
+  };
+
+  const startPrice = data.length > 0 ? data[0].predictedPrice : 0;
+  const endPrice = data.length > 0 ? data[data.length - 1].predictedPrice : 0;
+  const percentageChange = startPrice !== 0 ? ((endPrice - startPrice) / startPrice) * 100 : 0;
+
+  data.forEach((d) => {
+    d.predictedPrice = Math.round(d.predictedPrice * 100) / 100;
+  });
+
 
   return (
     <div className="flex flex-col items-center justify-start min-h-screen bg-white pt-10">
-      <h1 className="text-2xl font-bold mb-6">StockPrediction</h1>
-      
-      <div className="w-3/4 max-w-md relative">
-        <button 
-          className="w-full px-4 py-2 bg-blue-700 text-white rounded-md flex justify-between items-center"
-          onClick={toggleDropdown}
-        >
-          Choose Stock
-          <img src={dropdown} alt="dropdown icon" className="w-6 h-6" />
-        </button>
+      <h1 className="text-2xl font-bold mb-6">Stock Prediction</h1>
 
-        {isOpen && (
-          <div className="mt-2 bg-white shadow-md rounded-md w-full absolute z-10">
-            <ul>
-              <li className="px-4 py-2 hover:bg-gray-100 cursor-pointer">Apple, Inc.</li>
-              <li className="px-4 py-2 hover:bg-gray-100 cursor-pointer">Microsoft, Corp.</li>
-              <li className="px-4 py-2 hover:bg-gray-100 cursor-pointer">Tesla, Inc.</li>
-              <li className="px-4 py-2 hover:bg-gray-100 cursor-pointer">Amazon, Inc.</li>
-            </ul>
+      <div className="w-3/4 max-w-md relative">
+        <Select onValueChange={handleStockChange}>
+          <SelectTrigger className="w-full">
+            <SelectValue placeholder="Choose Stock" />
+          </SelectTrigger>
+          <SelectContent>
+            {list_code_stock.map((stock) => (
+              <SelectItem key={stock} value={stock}>{stock}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+
+        {loading ? ( 
+          <div className="mt-4 text-center">Loading prediction...</div>
+        ) : (
+          <div className="mt-4 flex items-center bg-blue-100 rounded-md p-4">
+            <div className="w-2/3 h-64">
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart data={data}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="date" tick={{ fontSize: '12px' }} />
+                  <YAxis domain={[startPrice, endPrice]} tick={{ fontSize: '12px' }} />
+                  <Tooltip />
+                  <Line type="monotone" dataKey="predictedPrice" stroke="#8884d8" />
+                </LineChart>
+              </ResponsiveContainer>
+            </div>
+            <div className="w-1/3 text-right">
+              <h2 className="text-lg font-bold">{selectedStock || 'Stock Name'}</h2>
+              <p className="text-xl font-bold text-blue-700">{percentageChange.toFixed(2)}%</p>
+              <p className="text-sm">in 7 days</p>
+            </div>
           </div>
         )}
-
-        <div className="mt-4 flex items-center bg-blue-100 rounded-md p-4">
-          <div className="w-2/3 h-64">
-            <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={data}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="date" tick={{ fontSize: '12px' }} />
-                <YAxis domain={[startPrice, endPrice]} tick={{ fontSize: '12px' }} />
-                <Tooltip />
-                <Line type="monotone" dataKey="predictedPrice" stroke="#8884d8" />
-              </LineChart>
-            </ResponsiveContainer>
-          </div>
-          <div className="w-1/3 text-right">
-            <h2 className="text-lg font-bold">Apple, Inc.</h2>
-            <p className="text-xl font-bold text-blue-700">+2%</p>
-            <p className="text-sm">in 7 days</p>
-          </div>
-        </div>
       </div>
     </div>
   );
-}
+};
 
 export default Prediction;
