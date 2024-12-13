@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Plus } from 'lucide-react';
 import { Button } from "../components/ui/button";
@@ -8,44 +8,117 @@ import { Card, CardContent } from "../components/ui/card";
 
 interface SavingItem {
     name: string;
-    amount: string;
-    percentage: number;
+    amount: number;
+    type: 'investment' | 'saving';
 }
+
+interface TargetedSaving {
+    status: number;
+    name: string;
+    currentSavings: number;
+    savingNeedPerMonth: number;
+    savingGoal: number;
+    savingPeriod: number;
+}
+
+interface ApiResponse {
+    savings: SavingItem[];
+}
+
+const getAuthToken = () => {
+    return localStorage.getItem('authToken');
+};
+
+const getHeaders = (contentType = false) => {
+    const headers: Record<string, string> = {
+        'Authorization': `Bearer ${getAuthToken()}`,
+    };
+    
+    if (contentType) {
+        headers['Content-Type'] = 'application/json';
+    }
+    
+    return headers;
+};
 
 export default function Dashboard() {
     const navigate = useNavigate();
-    const [savings, setSavings] = useState<SavingItem[]>([
-        { name: 'Tabungan', amount: '500.000,00', percentage: 25 },
-        { name: 'Dana Darurat', amount: '200.000,00', percentage: 10 },
-        { name: 'Wishlist', amount: '300.000,00', percentage: 15 }
-    ]);
+    const [allSavings, setAllSavings] = useState<SavingItem[]>([]);
+    const [totalAmount, setTotalAmount] = useState(0);
+    const [savingGoal, setSavingGoal] = useState<number | null>(null);
 
-    const [investments, setInvestments] = useState<SavingItem[]>([
-        { name: 'Saham', amount: '500.000,00', percentage: 25 },
-        { name: 'Pasar Uang', amount: '200.000,00', percentage: 10 },
-        { name: 'Obligasi', amount: '300.000,00', percentage: 15 }
-    ]);
+    useEffect(() => {
+        fetchSavings();
+        fetchSavingGoal();
+    }, []);
+
+    const fetchSavings = async () => {
+        try {
+            const response = await fetch('https://financebro-backend-958019176719.us-central1.run.app/tracker/savings', {
+                method: 'GET',
+                headers: getHeaders()
+            });
+            if (!response.ok) throw new Error('Failed to fetch savings');
+            
+            const data: ApiResponse = await response.json();
+            setAllSavings(data.savings);
+            
+            const total = data.savings.reduce((sum, item) => sum + item.amount, 0);
+            setTotalAmount(total);
+        } catch (error) {
+            console.error('Error fetching savings:', error);
+        }
+    };
+
+    const fetchSavingGoal = async () => {
+        try {
+            const response = await fetch('https://financebro-backend-958019176719.us-central1.run.app/calculator', {
+                method: 'GET',
+                headers: getHeaders()
+            });
+            if (!response.ok) throw new Error('Failed to fetch saving goal');
+            
+            const data: TargetedSaving = await response.json();
+            setSavingGoal(data.savingGoal);
+        } catch (error) {
+            console.error('Error fetching saving goal:', error);
+        }
+    };
+
+    const calculatePercentage = (amount: number) => {
+        return Math.round((amount / totalAmount) * 100);
+    };
+
+    const formatAmount = (amount: number) => {
+        return amount.toLocaleString('id-ID', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    };
+
+    const savings = allSavings.filter(item => item.type === 'saving');
+    const investments = allSavings.filter(item => item.type === 'investment');
 
     return (
         <div className="min-h-screen bg-gray-100">
             <div className="p-4 space-y-6">
-
                 <div className="flex justify-between items-center">
                     <div className="flex items-center gap-3">
                         <h1 className="text-2xl font-bold text-black">Hello, Bob!</h1>
                     </div>
-                    <Button size="icon" className="w-10 h-10 rounded-full bg-[#031A6E] text-white flex items-center justify-center" onClick={() => navigate('/my-savings')}>
+                    <Button 
+                        size="icon" 
+                        className="w-10 h-10 rounded-full bg-[#031A6E] text-white flex items-center justify-center" 
+                        onClick={() => navigate('/my-savings')}
+                    >
                         <Plus className="w-6 h-6 text-white font-bold" />
                     </Button>
                 </div>
 
                 <Card className="bg-[#031A6E] text-white">
                     <CardContent className="p-6">
-                        <h2 className="text-3xl font-bold">Rp2.000.000,00</h2>
+                        <h2 className="text-3xl font-bold">Rp{formatAmount(totalAmount)}</h2>
                         <p className="text-white/70 mb-8">My Savings</p>
                         <div className="text-right">
                             <p className="text-white/70">From Target</p>
-                            <p className="text-xl">Rp1.000.000.000,00</p>
+                            <p className="text-xl">Rp{formatAmount(savingGoal || 0)}</p>
                         </div>
                     </CardContent>
                 </Card>
@@ -63,10 +136,10 @@ export default function Dashboard() {
                                         <div key={index} className="flex justify-between items-center">
                                             <div>
                                                 <p className="font-medium text-[#031A6E]">{item.name}</p>
-                                                <p className="text-lg font-bold text-[#031A6E]">Rp{item.amount}</p>
+                                                <p className="text-lg font-bold text-[#031A6E]">Rp{formatAmount(item.amount)}</p>
                                             </div>
                                             <div className="text-[#031A6E] text-2xl font-bold">
-                                                {item.percentage}%
+                                                {calculatePercentage(item.amount)}%
                                             </div>
                                         </div>
                                     ))}
@@ -87,10 +160,10 @@ export default function Dashboard() {
                                         <div key={index} className="flex justify-between items-center">
                                             <div>
                                                 <p className="font-medium text-[#031A6E]">{item.name}</p>
-                                                <p className="text-lg font-bold text-[#031A6E]">Rp{item.amount}</p>
+                                                <p className="text-lg font-bold text-[#031A6E]">Rp{formatAmount(item.amount)}</p>
                                             </div>
                                             <div className="text-[#031A6E] text-2xl font-bold">
-                                                {item.percentage}%
+                                                {calculatePercentage(item.amount)}%
                                             </div>
                                         </div>
                                     ))}
