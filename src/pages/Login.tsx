@@ -70,7 +70,7 @@ export default function Login() {
                     if (response.status === 201) {
                         navigate('/profile');
                     } else {
-                        navigate('/');
+                        navigate('/home');
                     }
                 } catch (error) {
                   console.error('Error:', error);
