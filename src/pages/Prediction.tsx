@@ -90,6 +90,11 @@ const Prediction: React.FC = () => {
   const endPrice = data.length > 0 ? data[data.length - 1].predictedPrice : 0;
   const percentageChange = startPrice !== 0 ? ((endPrice - startPrice) / startPrice) * 100 : 0;
 
+  data.forEach((d) => {
+    d.predictedPrice = Math.round(d.predictedPrice * 100) / 100;
+  });
+
+
   return (
     <div className="flex flex-col items-center justify-start min-h-screen bg-white pt-10">
       <h1 className="text-2xl font-bold mb-6">Stock Prediction</h1>
