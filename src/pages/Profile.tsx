@@ -1,15 +1,16 @@
-'use client'
-import { useState, useEffect } from 'react'
-import { Button } from "../components/ui/button"
-import { Input } from "../components/ui/input"
-import { Card } from "../components/ui/card"
+import { useState, useEffect } from 'react';
+import { Button } from "../components/ui/button";
+import { Input } from "../components/ui/input";
+import { Card } from "../components/ui/card";
+import { useNavigate } from 'react-router-dom';
+import Popup from '../components/Popup';
 
 interface FormData {
-    name: string;
-    age: string;
-    retireAge: string;
-    retirePeriod: string;
-    monthlyExpenses: string;
+  name: string;
+  age: string;
+  retireAge: string;
+  retirePeriod: string;
+  monthlyExpenses: string;
 }
 
 export default function RetirementForm() {
@@ -20,6 +21,8 @@ export default function RetirementForm() {
     retirePeriod: '',
     monthlyExpenses: ''
   });
+  const [popupMessage, setPopupMessage] = useState<string | null>(null);
+  const navigate = useNavigate();
 
   const getAuthToken = () => {
     return localStorage.getItem('authToken');
@@ -48,10 +51,12 @@ export default function RetirementForm() {
         method: 'GET',
         headers: getHeaders()
       });
-
-
+  
       if (response.ok) {
         const data = await response.json();
+        console.log('GET Response Data:', data);
+  
+        // Set the fetched data as the form data
         setFormData({
           name: data.name || '',
           age: data.age?.toString() || '',
@@ -65,36 +70,50 @@ export default function RetirementForm() {
     } catch (error) {
       console.error('Error fetching profile data:', error);
     }
-  };
+  };  
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
+    const payload = {
+      name: formData.name,
+      age: parseInt(formData.age),
+      retireAge: parseInt(formData.retireAge),
+      retirePeriod: parseInt(formData.retirePeriod),
+      monthlyExpenses: parseInt(formData.monthlyExpenses)
+    };
+  
+    console.log('Payload being sent:', payload);
+    const headers = getHeaders(true);
+    console.log('PUT Request Headers:', headers);
+  
     try {
       const response = await fetch('https://financebro-backend-958019176719.us-central1.run.app/tracker', {
         method: 'PUT',
-        headers: getHeaders(),
-        body: JSON.stringify({
-          name: formData.name,
-          age: parseInt(formData.age),
-          retireAge: parseInt(formData.retireAge),
-          retirePeriod: parseInt(formData.retirePeriod),
-          monthlyExpenses: parseInt(formData.monthlyExpenses)
-        })
+        headers: headers,
+        body: JSON.stringify(payload)
       });
-
+  
+      console.log('PUT Response:', response);
+  
       if (response.ok) {
-        const result = await response.json();
-        console.log('Update successful:', result);
-        // You could add a success notification here
+        if (response.status === 204) {
+          setPopupMessage('Profile updated successfully!');
+        } else {
+          const result = await response.json();
+          console.log('PUT Response Data:', result);
+          setPopupMessage('Profile updated successfully!'); 
+        }
       } else {
-        console.error('Failed to update profile');
-        // You could add an error notification here
+        const errorData = await response.json();
+        console.error('Failed to update profile:', errorData);
+        setPopupMessage('Failed to update profile. Please try again.');
       }
     } catch (error) {
       console.error('Error updating profile:', error);
+      setPopupMessage('An error occurred. Please try again.');
     }
-  };
+  };  
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -107,7 +126,11 @@ export default function RetirementForm() {
   const handleLogout = () => {
     console.log('Logging out...');
     localStorage.removeItem('authToken');
-    console.log(localStorage.getItem('authToken'));
+    navigate('/login');
+  };
+
+  const closePopup = () => {
+    setPopupMessage(null);
   };
 
   return (
@@ -175,6 +198,8 @@ export default function RetirementForm() {
           </div>
         </form>
       </Card>
+
+      {popupMessage && <Popup message={popupMessage} onClose={closePopup} />}
     </div>
-  )
+  );
 }
