@@ -4,8 +4,9 @@ import { useState } from 'react';
 import { Button } from '../components/ui/button';
 
 export default function SavingsPage() {
-  const [selectedAccount, setSelectedAccount] = useState<string>('Savings Account');
-  const [amount, setAmount] = useState<string>('');
+  const [selectedAccount, setSelectedAccount] = useState('Savings Account');
+  const [selectedItem, setSelectedItem] = useState('Item 1');
+  const [amount, setAmount] = useState('');
 
   const handleSave = () => {
     alert(`Saved Rp${amount} to ${selectedAccount}`);
@@ -22,66 +23,73 @@ export default function SavingsPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-100">
-      {/* Savings Section */}
-      <div className="p-6">
-        {/* Account Dropdown */}
-        <div className="mb-4">
-          <label htmlFor="account" className="block text-lg font-medium mb-2">
-            Account
-          </label>
-          <select
-            id="account"
-            value={selectedAccount}
-            onChange={(e) => setSelectedAccount(e.target.value)}
-            className="w-full px-4 py-2 border rounded bg-blue-600 text-white"
-          >
-            <option value="Savings Account">Savings Account</option>
-            <option value="Emergency Fund">Emergency Fund</option>
-            <option value="Wishlist">Wishlist</option>
-          </select>
-        </div>
+    <div className="flex flex-col items-center justify-center min-h-screen bg-white">
+      {/* Account Dropdown */}
+      <div className="w-3/4 max-w-md mb-4">
+        <select
+          id="account"
+          value={selectedAccount}
+          onChange={(e) => setSelectedAccount(e.target.value)}
+          className="w-full px-4 py-2 bg-blue-700 text-white rounded-md"
+        >
+          <option value="Category">Category</option>
+          <option value="Savings">Savings</option>
+          <option value="Investment">Investment</option>
+        </select>
+      </div>
 
-        {/* Amount Input */}
-        <div className="mb-4">
-          <label htmlFor="amount" className="block text-lg font-medium mb-2">
-            Amount
-          </label>
-          <input
-            id="amount"
-            type="text"
-            value={amount}
-            onChange={(e) => setAmount(e.target.value)}
-            placeholder="Enter amount"
-            className="w-full px-4 py-2 border rounded bg-gray-50"
-          />
-        </div>
+      {/* Item Dropdown */}
+      <div className="w-3/4 max-w-md mb-4">
+        <select
+          id="item"
+          value={selectedItem}
+          onChange={(e) => setSelectedItem(e.target.value)}
+          className="w-full px-4 py-2 bg-blue-700 text-white rounded-md"
+        >
+          <option value="Item">Item</option>
+          <option value="Dana Darurat">Dana Darurat</option>
+          <option value="Wishlist">Wishlist</option>
+        </select>
+      </div>
 
-        {/* Buttons */}
-        <div className="flex justify-between gap-4">
+      {/* Amount Input */}
+      <div className="w-3/4 max-w-md mb-6">
+        <input
+          id="amount"
+          type="text"
+          value={amount}
+          onChange={(e) => setAmount(e.target.value)}
+          placeholder="Amount"
+          className="w-full px-4 py-2 bg-blue-100 border border-blue-200 rounded-md"
+        />
+      </div>
+
+      {/* Buttons */}
+      {selectedAccount !== 'Investment' && (
+        <div className="flex justify-center gap-4 mb-6">
           <Button
             onClick={handleSave}
-            className="w-full bg-green-500 text-white hover:bg-green-600"
+            className="px-6 py-2 bg-green-500 text-white rounded-md hover:bg-green-600"
           >
             Save
           </Button>
           <Button
             onClick={handleTake}
-            className="w-full bg-red-500 text-white hover:bg-red-600"
+            className="px-6 py-2 bg-red-500 text-white rounded-md hover:bg-red-600"
           >
             Take
           </Button>
         </div>
+      )}
 
-        {/* Track Button */}
-        <div className="mt-4">
-          <Button
-            onClick={handleTrack}
-            className="w-full bg-blue-500 text-white hover:bg-blue-600"
-          >
-            Track
-          </Button>
-        </div>
+      {/* Track Button */}
+      <div className="w-3/4 max-w-md">
+        <Button
+          onClick={handleTrack}
+          className="w-full px-6 py-2 bg-blue-700 text-white rounded-md hover:bg-blue-800"
+        >
+          Track
+        </Button>
       </div>
     </div>
   );
