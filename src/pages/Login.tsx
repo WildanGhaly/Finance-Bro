@@ -13,23 +13,23 @@ export default function Login() {
       justifyContent: 'center',
       alignItems: 'center',
       background: 'linear-gradient(135deg, #1a237e 60%, #283593 100%)',
-    },
+    } as React.CSSProperties,
     content: {
       display: 'flex',
-      flexDirection: 'column',
+      flexDirection: 'column' as const,
       alignItems: 'center',
       gap: '2rem',
-    },
+    } as React.CSSProperties,
     logoContainer: {
       width: '80px',
       height: '80px',
-    },
+    } as React.CSSProperties,
     logo: {
       width: '100%',
       height: '100%',
-      objectFit: 'contain',
+      objectFit: 'contain' as const,
       filter: 'brightness(0) invert(1)',
-    },
+    } as React.CSSProperties,
     loginButton: {
       backgroundColor: '#f5f5f5',
       padding: '0.5rem',
@@ -37,7 +37,7 @@ export default function Login() {
       width: '300px',
       display: 'flex',
       justifyContent: 'center',
-    },
+    } as React.CSSProperties,
   };
 
   return (
@@ -47,6 +47,7 @@ export default function Login() {
           <img 
             src="src/assets/logo.svg"
             style={styles.logo}
+            alt="Logo"
           />
         </div>
         <div style={styles.loginButton}>
