@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Plus } from 'lucide-react';
 import { Button } from "../components/ui/button";
 import { Card, CardContent } from "../components/ui/card";
@@ -12,6 +13,7 @@ interface SavingItem {
 }
 
 export default function Dashboard() {
+    const navigate = useNavigate();
     const [savings, setSavings] = useState<SavingItem[]>([
         { name: 'Tabungan', amount: '500.000,00', percentage: 25 },
         { name: 'Dana Darurat', amount: '200.000,00', percentage: 10 },
@@ -32,7 +34,7 @@ export default function Dashboard() {
                     <div className="flex items-center gap-3">
                         <h1 className="text-2xl font-bold text-black">Hello, Bob!</h1>
                     </div>
-                    <Button size="icon" className="w-10 h-10 rounded-full bg-[#031A6E] text-white flex items-center justify-center">
+                    <Button size="icon" className="w-10 h-10 rounded-full bg-[#031A6E] text-white flex items-center justify-center" onClick={() => navigate('/my-savings')}>
                         <Plus className="w-6 h-6 text-white font-bold" />
                     </Button>
                 </div>

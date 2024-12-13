@@ -7,6 +7,7 @@ import MySavingsPage from './pages/MySavings';
 import SavingInvestForm from './pages/SavingInvestment';
 import Calculator from './pages/Calculator';
 import RetirementForm from './pages/Profile';
+import Prediction from './pages/Prediction';
 import Login from './pages/Login';
 
 const App: React.FC = () => {
@@ -40,6 +41,8 @@ const App: React.FC = () => {
         <Route path="/saving-investment" element={<SavingInvestForm />} />
         <Route path="/calculator" element={<Calculator />} />
         <Route path="/profile" element={<RetirementForm />} />
+        <Route path="/saving-investment" element={<SavingInvestForm />} />
+        <Route path="/prediction" element={<Prediction />} />
         <Route path="/login" element={<Login />} />
       </Routes>
     </>
