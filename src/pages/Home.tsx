@@ -46,6 +46,7 @@ export default function Dashboard() {
     const [allSavings, setAllSavings] = useState<SavingItem[]>([]);
     const [totalAmount, setTotalAmount] = useState(0);
     const [savingGoal, setSavingGoal] = useState<number | null>(null);
+    const [name, setName] = useState<string | null>(null);
 
     useEffect(() => {
         fetchSavings();
@@ -80,6 +81,7 @@ export default function Dashboard() {
             
             const data: TargetedSaving = await response.json();
             setSavingGoal(data.savingGoal);
+            setName(data.name);
         } catch (error) {
             console.error('Error fetching saving goal:', error);
         }
@@ -101,7 +103,7 @@ export default function Dashboard() {
             <div className="p-4 space-y-6">
                 <div className="flex justify-between items-center">
                     <div className="flex items-center gap-3">
-                        <h1 className="text-2xl font-bold text-black">Hello, Bob!</h1>
+                        <h1 className="text-2xl font-bold text-black">Hello, {name}!</h1>
                     </div>
                     <Button 
                         size="icon" 
