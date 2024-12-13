@@ -1,35 +1,52 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import React, { useEffect } from 'react';
+import { useNavigate, Routes, Route, useLocation } from 'react-router-dom'; 
+import Navbar from './components/Navbar';
+import Home from './pages/Home';
+import SavingsPage from './pages/Savings';
+import MySavingsPage from './pages/MySavings';
+import SavingInvestForm from './pages/SavingInvestment';
+import Calculator from './pages/Calculator';
+import RetirementForm from './pages/Profile';
+import Prediction from './pages/Prediction';
+import Login from './pages/Login';
 
-function App() {
-  const [count, setCount] = useState(0)
+const App: React.FC = () => {
+    const navigate = useNavigate();
+    const location = useLocation();
+  
+    useEffect(() => {
+      const authToken = localStorage.getItem('authToken');
+      
+      // Only redirect if on login page and token exists
+      if (authToken && location.pathname === '/login') {
+        navigate('/home');
+      }
+      // Only redirect to login if no token and not already on login page
+      else if (!authToken && location.pathname !== '/login') {
+        navigate('/login');
+      }
+    }, [navigate, location]);
+  
 
   return (
     <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
-  )
-}
+      {location.pathname !== '/login' && <Navbar />} {/* Only show Navbar if not on login page */}
+      
+      {/* <Navbar /> */}
 
-export default App
+      <Routes>
+        <Route path="/home" element={<Home />} />
+        <Route path="/savings" element={<SavingsPage />} />
+        <Route path="/my-savings" element={<MySavingsPage />} />
+        <Route path="/saving-investment" element={<SavingInvestForm />} />
+        <Route path="/calculator" element={<Calculator />} />
+        <Route path="/profile" element={<RetirementForm />} />
+        <Route path="/saving-investment" element={<SavingInvestForm />} />
+        <Route path="/prediction" element={<Prediction />} />
+        <Route path="/login" element={<Login />} />
+      </Routes>
+    </>
+  );
+};
+
+export default App;
