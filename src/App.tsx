@@ -1,6 +1,5 @@
-// src/App.tsx
-import React from 'react';
-import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
+import React, { useEffect } from 'react';
+import { useNavigate, Routes, Route, useLocation } from 'react-router-dom'; 
 import Navbar from './components/Navbar';
 import Home from './pages/Home';
 import SavingsPage from './pages/Savings';
@@ -9,11 +8,32 @@ import SavingInvestForm from './pages/SavingInvestment';
 import Calculator from './pages/Calculator';
 import RetirementForm from './pages/Profile';
 import Prediction from './pages/Prediction';
+import Login from './pages/Login';
 
 const App: React.FC = () => {
+    const navigate = useNavigate();
+    const location = useLocation();
+  
+    useEffect(() => {
+      const authToken = localStorage.getItem('authToken');
+      
+      // Only redirect if on login page and token exists
+      if (authToken && location.pathname === '/login') {
+        navigate('/home');
+      }
+      // Only redirect to login if no token and not already on login page
+      else if (!authToken && location.pathname !== '/login') {
+        navigate('/login');
+      }
+    }, [navigate, location]);
+  
+
   return (
-    <Router>
-      <Navbar />
+    <>
+      {location.pathname !== '/login' && <Navbar />} {/* Only show Navbar if not on login page */}
+      
+      {/* <Navbar /> */}
+
       <Routes>
         <Route path="/home" element={<Home />} />
         <Route path="/savings" element={<SavingsPage />} />
@@ -23,8 +43,9 @@ const App: React.FC = () => {
         <Route path="/profile" element={<RetirementForm />} />
         <Route path="/saving-investment" element={<SavingInvestForm />} />
         <Route path="/prediction" element={<Prediction />} />
+        <Route path="/login" element={<Login />} />
       </Routes>
-    </Router>
+    </>
   );
 };
 
