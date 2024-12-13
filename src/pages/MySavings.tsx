@@ -1,87 +1,124 @@
-import React, { useState } from 'react';
-import { Plus, ArrowLeft } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Plus, ArrowLeft, TrashIcon } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { useNavigate } from 'react-router-dom';
 
-interface SavingsItem {
+interface SavingsData {
   name: string;
-  amount: string;
-  percentage: number;
+  amount: number;
+  type: 'investment' | 'saving';
 }
+
+interface RequestSaving {
+  name: string;
+  amount: number;
+  type: 'investment' | 'saving';
+}
+
+interface ApiResponse {
+  savings: SavingsData[];
+}
+
+const getAuthToken = () => {
+  return localStorage.getItem('authToken');
+};
+
+const getHeaders = (contentType = false) => {
+  const headers: Record<string, string> = {
+      'Authorization': `Bearer ${getAuthToken()}`,
+  };
+  
+  if (contentType) {
+      headers['Content-Type'] = 'application/json';
+  }
+  
+  return headers;
+};
 
 const MySavingsPage: React.FC = () => {
   const navigate = useNavigate();
-
-  const [savingsItems, setSavingsItems] = useState<SavingsItem[]>([
-    {
-      name: 'Tabungan',
-      amount: 'Rp500,000.00',
-      percentage: 25,
-    },
-    {
-      name: 'Dana Darurat',
-      amount: 'Rp200,000.00',
-      percentage: 10,
-    },
-    {
-      name: 'Wishlist',
-      amount: 'Rp300,000.00',
-      percentage: 15,
-    },
-  ]);
-
-  const [investmentItems, setInvestmentItems] = useState<SavingsItem[]>([
-    {
-      name: 'Saham',
-      amount: 'Rp500,000.00',
-      percentage: 25,
-    },
-    {
-      name: 'Pasar Uang',
-      amount: 'Rp200,000.00',
-      percentage: 10,
-    },
-    {
-      name: 'Obligasi',
-      amount: 'Rp300,000.00',
-      percentage: 15,
-    },
-  ]);
-
+  const [allSavings, setAllSavings] = useState<SavingsData[]>([]);
   const [isAddingSaving, setIsAddingSaving] = useState(false);
   const [isAddingInvestment, setIsAddingInvestment] = useState(false);
+  const [totalAmount, setTotalAmount] = useState(0);
 
-  const [newSaving, setNewSaving] = useState<SavingsItem>({
-    name: '',
-    amount: '',
-    percentage: 0,
-  });
+  const savingsItems = allSavings.filter((item) => item.type === 'saving');
+  const investmentItems = allSavings.filter((item) => item.type === 'investment');
 
-  const [newInvestment, setNewInvestment] = useState<SavingsItem>({
-    name: '',
-    amount: '',
-    percentage: 0,
-  });
+  useEffect(() => {
+      fetchSavings();
+  }, []);
 
-  const handleAddSaving = () => {
-    if (newSaving.name && newSaving.amount && newSaving.percentage > 0) {
-      setSavingsItems((prevItems) => [...prevItems, newSaving]);
-      setNewSaving({ name: '', amount: '', percentage: 0 });
-      setIsAddingSaving(false);
-    } else {
-      alert('Please fill out all fields correctly!');
+  const fetchSavings = async () => {
+    try {
+        const response = await fetch('https://financebro-backend-958019176719.us-central1.run.app/tracker/savings', {
+            method: 'GET',
+            headers: getHeaders()
+        });
+        if (!response.ok) throw new Error('Failed to fetch savings');
+        
+        const data: ApiResponse = await response.json();
+        setAllSavings(data.savings);
+        
+        const total = data.savings.reduce((sum, item) => sum + item.amount, 0);
+        setTotalAmount(total);
+    } catch (error) {
+        console.error('Error fetching savings:', error);
     }
   };
 
-  const handleAddInvestment = () => {
-    if (newInvestment.name && newInvestment.amount && newInvestment.percentage > 0) {
-      setInvestmentItems((prevItems) => [...prevItems, newInvestment]);
-      setNewInvestment({ name: '', amount: '', percentage: 0 });
-      setIsAddingInvestment(false);
-    } else {
-      alert('Please fill out all fields correctly!');
+  const calculatePercentage = (amount: number) => {
+    return Math.round((amount / totalAmount) * 100);
+  };
+
+  const [newSaving, setNewSaving] = useState<RequestSaving>({
+    name: '',
+    amount: 0,
+    type: 'saving',
+  });
+
+  const [newInvestment, setNewInvestment] = useState<RequestSaving>({
+    name: '',
+    amount: 0,
+    type: 'investment',
+  });
+
+  const handleAdd = (Saving: RequestSaving) => async () => {
+    try {
+      const response = await fetch('https://financebro-backend-958019176719.us-central1.run.app/tracker/savings', {
+        method: 'POST',
+        headers: getHeaders(true),
+        body: JSON.stringify(Saving),
+      });
+      if (!response.ok) throw new Error('Failed to add saving');
+
+      fetchSavings();
+      if (Saving.type === 'saving') {
+        setNewSaving({ name: '', amount: 0, type: 'saving' });
+        setIsAddingSaving(false);
+      } else {
+        setNewInvestment({ name: '', amount: 0, type: 'investment' });
+        setIsAddingInvestment(false);
+      }
+    } catch (error) {
+      console.error('Error adding saving:', error);
     }
   };
+
+  const handleDelete = (name: string) => async () => {
+    try {
+      const response = await fetch(`https://financebro-backend-958019176719.us-central1.run.app/tracker/savings`, {
+        method: 'DELETE',
+        headers: getHeaders(true),
+        body: JSON.stringify({ name }),
+      });
+      if (!response.ok) throw new Error('Failed to delete saving');
+
+      fetchSavings();
+    } catch (error) {
+      console.error('Error deleting saving:', error);
+    }
+  }
 
   return (
     <div className="min-h-screen bg-gray-100 p-4 flex flex-col items-center">
@@ -96,8 +133,7 @@ const MySavingsPage: React.FC = () => {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8 w-full max-w-4xl">
-        {/* Savings Section */}
-        <div className="bg-blue-900 text-white p-6 rounded-lg flex flex-col items-center justify-center">
+        <div className="bg-blue-900 text-white p-6 rounded-lg flex flex-col items-center">
           <div className="w-full flex justify-between items-center mb-4">
             <h2 className="text-2xl font-bold">Saving</h2>
             <Button
@@ -117,13 +153,15 @@ const MySavingsPage: React.FC = () => {
                 <p className="font-medium">{item.name}</p>
                 <p className="text-lg font-bold">{item.amount}</p>
               </div>
-              <p className="text-2xl font-bold">{item.percentage}%</p>
+                <TrashIcon
+                  className="w-6 h-6 cursor-pointer"
+                  onClick={handleDelete(item.name)}
+                />
             </div>
           ))}
         </div>
 
-        {/* Investment Section */}
-        <div className="bg-blue-900 text-white p-6 rounded-lg flex flex-col items-center justify-center">
+        <div className="bg-blue-900 text-white p-6 rounded-lg flex flex-col items-center">
           <div className="w-full flex justify-between items-center mb-4">
             <h2 className="text-2xl font-bold">Investment</h2>
             <Button
@@ -143,13 +181,15 @@ const MySavingsPage: React.FC = () => {
                 <p className="font-medium">{item.name}</p>
                 <p className="text-lg font-bold">{item.amount}</p>
               </div>
-              <p className="text-2xl font-bold">{item.percentage}%</p>
+              <TrashIcon
+                className="w-6 h-6 cursor-pointer"
+                onClick={handleDelete(item.name)}
+              />
             </div>
           ))}
         </div>
       </div>
 
-      {/* Modal for Adding Saving */}
       {isAddingSaving && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center">
           <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-md">
@@ -169,19 +209,7 @@ const MySavingsPage: React.FC = () => {
                 placeholder="Amount"
                 value={newSaving.amount}
                 onChange={(e) =>
-                  setNewSaving((prev) => ({ ...prev, amount: e.target.value }))
-                }
-                className="w-full px-4 py-2 border rounded-lg"
-              />
-              <input
-                type="number"
-                placeholder="Percentage"
-                value={newSaving.percentage}
-                onChange={(e) =>
-                  setNewSaving((prev) => ({
-                    ...prev,
-                    percentage: Number(e.target.value),
-                  }))
+                  setNewSaving((prev) => ({ ...prev, amount: Number(e.target.value) }))
                 }
                 className="w-full px-4 py-2 border rounded-lg"
               />
@@ -194,7 +222,7 @@ const MySavingsPage: React.FC = () => {
                 Cancel
               </Button>
               <Button
-                onClick={handleAddSaving}
+                onClick={handleAdd(newSaving)}
                 className="px-4 py-2 bg-blue-600 text-white rounded-lg"
               >
                 Add
@@ -204,7 +232,6 @@ const MySavingsPage: React.FC = () => {
         </div>
       )}
 
-      {/* Modal for Adding Investment */}
       {isAddingInvestment && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center">
           <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-md">
@@ -224,19 +251,7 @@ const MySavingsPage: React.FC = () => {
                 placeholder="Amount"
                 value={newInvestment.amount}
                 onChange={(e) =>
-                  setNewInvestment((prev) => ({ ...prev, amount: e.target.value }))
-                }
-                className="w-full px-4 py-2 border rounded-lg"
-              />
-              <input
-                type="number"
-                placeholder="Percentage"
-                value={newInvestment.percentage}
-                onChange={(e) =>
-                  setNewInvestment((prev) => ({
-                    ...prev,
-                    percentage: Number(e.target.value),
-                  }))
+                  setNewInvestment((prev) => ({ ...prev, amount: Number(e.target.value) }))
                 }
                 className="w-full px-4 py-2 border rounded-lg"
               />
@@ -249,7 +264,7 @@ const MySavingsPage: React.FC = () => {
                 Cancel
               </Button>
               <Button
-                onClick={handleAddInvestment}
+                onClick={handleAdd(newInvestment)}
                 className="px-4 py-2 bg-blue-600 text-white rounded-lg"
               >
                 Add
