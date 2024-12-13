@@ -66,7 +66,12 @@ export default function Login() {
                   const data = await response.json();
                   const token = data.token;
                   localStorage.setItem('authToken', token);
-                  navigate('/home');
+                //if response 201, navigate to profile and if response 200, navigate to home
+                    if (response.status === 201) {
+                        navigate('/profile');
+                    } else {
+                        navigate('/');
+                    }
                 } catch (error) {
                   console.error('Error:', error);
                 }
